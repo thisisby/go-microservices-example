@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  product-service:
+    image: product-service
+    build:
+      context: product_svc
+      dockerfile: Dockerfile
+    ports:
+      - "50052:50052"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=0
+      - DB_NAME=product_svc
+    depends_on:
+      - postgre
+  order-service:
+    image: order-service
+    build:
+      context: order_svc
+      dockerfile: Dockerfile
+    ports:
+      - "50053:50053"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=0
+      - DB_NAME=order_svc
+    depends_on:
+      - postgre
+  auth-service:
+    image: auth-service
+    build:
+      context: auth_svc
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=0
+      - DB_NAME=auth_svc
+    depends_on:
+      - postgre
+
+  api-gateway:
+    image: api-gateway
+    build:
+      context: api_gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+
+  postgre:
+    image: postgres:latest
+    ports:
+      - "5432:5432/tcp"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
